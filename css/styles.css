@@ -1,0 +1,45 @@
+#nao-terminais,
+.nao-terminais-producao {
+    text-transform: uppercase;
+}
+
+.flecha{
+    margin-top: 3px;
+    font-size: 1.8em;
+}
+
+.botao-mais{
+    padding: 5px 0;
+}
+
+.duplicar{
+    margin-bottom: 10px;
+    display: inline-block;
+    width: 100%;
+}
+.bottom-button{
+    margin-top: 25px;
+    width: 100%;
+}
+
+.saida div {
+    margin-bottom: 15px;
+}
+
+ul.dicas{
+    padding-left: 20px;
+}
+
+.alert {
+    margin-bottom: 0;
+    margin-top: 15px;
+}
+
+#table td,
+#table th {
+    text-align: center;
+ }
+
+#status-final {
+    margin-bottom: 10px;
+}

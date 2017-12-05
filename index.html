@@ -1,0 +1,196 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="pt-br" lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+
+    <title>Analisador Preditivo Tabular</title>
+
+    <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery.serialize-object.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/interface-functions.js"></script>
+    <script type="text/javascript" src="js/parser-functions.js"></script>
+
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-10">
+                <h2>Analisador SLR</h2>
+                <h4>Douglas Felipe Fuelber, Felipe Fritzen e Felipe Hertzer</h4>
+                <h5>Disciplina de Compiladores - 2017/2</h5>
+            </div>
+            <div class="col-xs-2">
+                <button class="btn btn-primary bottom-button" id="showHelp" type="button" data-toggle="modal" data-target="#helpModal">
+                    <i class="glyphicon glyphicon-question-sign"></i> Ajuda</button>
+            </div>
+        </div>
+        <hr>
+
+        <div class="row">
+            <div class="col-xs-12 grammar-input">
+
+                <h4>Entrada da Gramática</h4>
+                <form>
+                    <div id="gramatica">
+                        <div class="form-group">
+                            <label class="control-label">Símbolos Não-Terminais</label>
+                            <input type="text" class="form-control" placeholder="S, A, B, C" id="nao-terminais" name="naoTerminais">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Símbolos Terminais</label>
+                            <input type="text" class="form-control" placeholder="a, b, c" id="terminais" name="terminais" disabled>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-6">
+                                <label class="control-label">Símbolo de Conjunto de Produções</label>
+                                <input type="text" class="form-control" placeholder="P" value="P" disabled name="simbolo-conjunto" id="simboloConjunto">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="control-label">Símbolo de Início de Produções</label>
+                                <select class="form-control" id="simbolo-inicio" disabled name="simboloInicio">
+                                    <option>Digite os não terminais</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row clones">
+                            <div class="col-xs-12">
+                                <label class="control-label">Conjunto de Produções</label>
+                            </div>
+                            <div class="duplicar">
+                                <div class="col-sm-3">
+                                    <input type="text" class="form-control nao-terminais-producao" disabled name="producoes[][naoTerminais]">
+                                </div>
+                                <div class="col-sm-1">
+                                    <i class="glyphicon glyphicon-arrow-right flecha"></i>
+                                </div>
+                                <div class="col-sm-6">
+                                    <input type="text" class="form-control complemento-producao" disabled name="producoes[][complemento]">
+                                </div>
+                                <div class="col-sm-2 text-right">
+                                    <button class="btn btn-danger remove btn-sm" type="button">
+                                        <i class="glyphicon glyphicon-remove botao-mais"></i>
+                                    </button>
+                                    <button class="btn btn-primary clone btn-sm" type="button">
+                                        <i class="glyphicon glyphicon-plus botao-mais"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row">
+                    <div class="col-xs-12 col-sm-4">
+                        <button type="button" class="btn btn-default bottom-button" id="refresh">
+                            <i class="glyphicon glyphicon glyphicon-refresh"></i> Limpar</button>
+                    </div>
+                    <div class="col-xs-12 col-sm-4" id="status">
+                    </div>
+                    <div class="col-xs-12 col-sm-4">
+                        <button class="btn btn-primary bottom-button" id="monta-tabela" href="#first-follow" type="button">
+                            <i class="glyphicon glyphicon-th-list"></i> Montar Tabela</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+        <div id="first-follow" class="row" style="display: none;">
+            <div class="col-xs-12 col-sm-6">
+                <h4>First</h4>
+                <ul id="first"></ul>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <h4>Follow</h4>
+                <ul id="follow"></ul>
+            </div>
+        </div>
+
+        <hr>
+        <div id="table" class="row" style="display: none;">
+            <div class="col-xs-12 grammar-output">
+                <h4>Tabela</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-sm-8">
+                        <div id="form-sentenca" class="form-group">
+                            <label class="control-label">Sentença a ser verificada:</label>
+                            <input type="text" class="form-control" placeholder="cbca" id="sentenca" name="sentenca">
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-4">
+                        <button class="btn btn-primary bottom-button" id="analisar" type="button">
+                            <i class="glyphicon glyphicon-play-circle"></i> Analisar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+        <div id="output" class="row" style="display: none;">
+            <div class="col-xs-12 grammar-output">
+                <h4>Saída</h4>
+                <div class="table-responsive saida"></div>
+            </div>
+            <div class="col-xs-12" id="status-final"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModal">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Ajuda</h4>
+                </div>
+                <div class="modal-body">
+                    <h4>Passos para utilização:</h4>
+                    <ol class="dicas">
+                        <li>Insira uma gramática (a gramática não pode ser ambígua e nem possuir recursão à esquerda)</li>
+                        <li>Pressione o botão "Montar Tabela", onde serão gerados os <em>firsts</em> e <em>follows</em> da gramática inserida
+                            e será montada a tabela para realização da análise.</li>
+                        <li>Juntamente aos <em>firsts</em> e <em>follows</em> da gramática e da tabela gerada, será exibido um campo para a entrada de uma sentença a ser reconhecida na gramática.<br>
+                            Insira a sentença desejada e pressione o botão "Analisar".</li>
+                        <li>Será exibida uma tabela com o passo a passo do reconhecimento.</li>
+                    </ol>
+                    <br>
+                    <h4>Representações:</h4>
+                    <ul class="dicas">
+                        <li><strong>Sentença vazia:</strong> <code>&amp</code>
+                            <br><hr></li>
+                        <li><strong>Símbolos Não-Terminais:</strong> utilize letras maíusculas. Ex.: <code>S</code>, <code>A</code>, <code>B</code>
+                            <br>Evite a utilização de símbolos compostos. Ex.: <code>S'</code>, <code>E'</code>, <code>T'</code>
+                            <br><hr></li>
+                        <li><strong>Símbolos Terminais:</strong> utilize letras minúsculas. Ex.: <code>a</code>, <code>b</code>, <code>c</code>
+                            <br>Evite a utilização de símbolos compostos ou caracteres especiais. Ex.: <code>(</code>, <code>*</code>, <code>)</code>, <code>id</code></li>
+                    </ul>
+                    <br>
+                    <h4>Dicas:</h4>
+                    <ul class="dicas">
+                        <li>Utilize o botão abaixo para inserir uma gramática de exemplo.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary pull-left" id="exemplo-gramatica" data-dismiss="modal">Inserir gramática de exemplo</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
