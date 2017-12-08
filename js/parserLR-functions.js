@@ -25,46 +25,87 @@ $(document).ready(function () {
             gramatica["naoTerminais"] = gramatica["naoTerminais"].replace(/\s/g, '').split(",");
             gramatica["terminais"] = gramatica["terminais"].replace(/\s/g, '').split(",");
 
-            //Inicializa array do first e follow no objeto gramatica
-            gramatica.first = [];
-            gramatica.follow = [];
+            /***************************************************************************/
 
-            //Percorre produções, gerando o first do não terminal em cada iteração
-            for (var i = (gramatica.producoes.length - 1); i >= 0; i--) {
-                gramatica = buscaFirst(gramatica, gramatica.producoes[i].naoTerminais);
-                gramatica.first[i].first = unique(gramatica.first[i].first);
-            }
+            //estruturaFollows = buscaFirstFollow(gramatica);
+            /*
+            follows = {S:a|s|$,
+                       A:c|e}
+            */
 
-            //Inicializa o follow do símbolo de início de produção da gramática
-            var indexFirstFollow = gramatica.producoes.findIndex(x => x.naoTerminais == gramatica.simboloInicio);
-            gramatica.follow[indexFirstFollow] = {};
-            gramatica.follow[indexFirstFollow].naoTerminal = gramatica.simboloInicio;
-            gramatica.follow[indexFirstFollow].follow = '$';
+            /***************************************************************************/
 
-            //Percorre produções, gerando o follow do não terminal em cada iteração
-            for (var t = 0; t < gramatica.producoes.length; t++) {
-                gramatica = buscaFollow(gramatica, gramatica.producoes[t].naoTerminais);
-            }
-            for (var t = 0; t < gramatica.producoes.length; t++) {
-                gramatica.follow[t].follow = unique(gramatica.follow[t].follow);
-                if(gramatica.follow[t].follow.indexOf('&')>-1){
-                    var arrayTemp = gramatica.follow[t].follow.replace(/\s/g, '').split(',');
-                    for(key in arrayTemp){
-                        if(arrayTemp[key].indexOf('&')>-1){
-                            arrayTemp.splice(key, 1);
-                        }
-                    }
-                    gramatica.follow[t].follow = arrayTemp.join(", ");
-                }
-            }
+            //Criação dos conjuntos canônicos
+            //Utiliza estrutura de follow
+            //Constrói e exibe toda a tabela com os arrays abaixo
+            //Estes arrays são utilizados para a etapa de teste
+            
+            //Saídas:
+            /*--------------------------------
+              arrayAcao[0] = {for:e2}
+              ...
+              arrayAcao[11] = {for:e2,
+                                id:r5}                    
+            */
 
-            // Realiza chama da função para geração da tabela
-            gramatica = geraTabela(gramatica);
+            /*-------------------------------
+              arrayDesvio[0] = {S:1}
+              ...
+              arrayDesvio[3] = {A:4}
+              ...
+              arrayDesvio[11] = {S:15,A:14}
+            */
+
+            /***************************************************************************/
+            
+            //No momento do clique do botão de reconhecimento
+            
+            //Recebe sentença para testar
+            //Utiliza arrayAcao e arrayDesvio para testar
+            //Contrói e exibe tabela
 
         }
 
     });
 
+    /*********************** FUNÇÕES DE FIRST E FOLLOW ***********************/
+
+    function buscaFirstFollow(gramatica) {
+        //Inicializa array do first e follow no objeto gramatica
+        gramatica.first = [];
+        gramatica.follow = [];
+
+        //Percorre produções, gerando o first do não terminal em cada iteração
+        for (var i = (gramatica.producoes.length - 1); i >= 0; i--) {
+            gramatica = buscaFirst(gramatica, gramatica.producoes[i].naoTerminais);
+            gramatica.first[i].first = unique(gramatica.first[i].first);
+        }
+
+        //Inicializa o follow do símbolo de início de produção da gramática
+        var indexFirstFollow = gramatica.producoes.findIndex(x => x.naoTerminais == gramatica.simboloInicio);
+        gramatica.follow[indexFirstFollow] = {};
+        gramatica.follow[indexFirstFollow].naoTerminal = gramatica.simboloInicio;
+        gramatica.follow[indexFirstFollow].follow = '$';
+
+        //Percorre produções, gerando o follow do não terminal em cada iteração
+        for (var t = 0; t < gramatica.producoes.length; t++) {
+            gramatica = buscaFollow(gramatica, gramatica.producoes[t].naoTerminais);
+        }
+        for (var t = 0; t < gramatica.producoes.length; t++) {
+            gramatica.follow[t].follow = unique(gramatica.follow[t].follow);
+            if(gramatica.follow[t].follow.indexOf('&')>-1){
+                var arrayTemp = gramatica.follow[t].follow.replace(/\s/g, '').split(',');
+                for(key in arrayTemp){
+                    if(arrayTemp[key].indexOf('&')>-1){
+                        arrayTemp.splice(key, 1);
+                    }
+                }
+                gramatica.follow[t].follow = arrayTemp.join(", ");
+            }
+        }
+        
+        return gramatica;
+    }
 
     var controlNullFirst = [];
 
@@ -211,5 +252,7 @@ $(document).ready(function () {
         }
         return gramatica;
     }
+
+    /*********************** FIM DAS FUNÇÕES DE FIRST E FOLLOW ***********************/
 
 });
