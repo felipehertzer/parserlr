@@ -24,6 +24,7 @@ $(document).ready(function () {
             // Transforma strings de NT e T em arrays
             gramatica["naoTerminais"] = gramatica["naoTerminais"].replace(/\s/g, '').split(",");
             gramatica["terminais"] = gramatica["terminais"].replace(/\s/g, '').split(",");
+            
 
             /***************************************************************************/
 
@@ -35,37 +36,19 @@ $(document).ready(function () {
 
             /***************************************************************************/
 
-            //Criação dos conjuntos canônicos
-            //Utiliza estrutura de follow
-            //Constrói e exibe toda a tabela com os arrays abaixo
-            //Estes arrays são utilizados para a etapa de teste
-            
-            //Saídas:
-            /*--------------------------------
-              arrayAcao[0] = {for:e2}
-              ...
-              arrayAcao[11] = {for:e2,
-                                id:r5}                    
-            */
-
-            /*-------------------------------
-              arrayDesvio[0] = {S:1}
-              ...
-              arrayDesvio[3] = {A:4}
-              ...
-              arrayDesvio[11] = {S:15,A:14}
-            */
-
-            /***************************************************************************/
-            
-            //No momento do clique do botão de reconhecimento
-            
-            //Recebe sentença para testar
-            //Utiliza arrayAcao e arrayDesvio para testar
-            //Contrói e exibe tabela
+            construcaoTabelaSLR(gramatica);            
 
         }
 
+    });
+
+    $("#analisar").on("click", function () {
+
+        var arrayAcao = JSON.parse(sessionStorage.getItem('acoes'));
+        var arrayDesvio = JSON.parse(sessionStorage.getItem('desvios'));
+        var gramatica = JSON.parse(sessionStorage.getItem('gramatica'));
+
+        //Contrói e exibe tabela
     });
 
     /*********************** FUNÇÕES DE FIRST E FOLLOW ***********************/
@@ -254,5 +237,189 @@ $(document).ready(function () {
     }
 
     /*********************** FIM DAS FUNÇÕES DE FIRST E FOLLOW ***********************/
+
+    /*********************** FUNÇÕES DE CRIAÇÃO DE TABELA ***********************/
+
+    function construcaoTabelaSLR(gramatica){
+
+        // Aumenta a gramática
+        gramatica.producoes.splice(0, 0, {naoTerminais: gramatica.simboloInicio + "'", complemento: gramatica.simboloInicio});
+
+        $.each(gramatica.producoes, function(i, producao){
+            producao.complemento = ". " + producao.complemento;
+        });
+    
+        // Operação goto
+        var goto = [];
+        var arrayResolvidos = [];
+    
+        //Insere primeiro item
+        goto.push(novoItemGoto(null,null, formataProducao(gramatica.producoes[0]), gramatica));
+
+        for (var x = 0; x < goto.length; x++){
+            var producoes = goto[x].producoes.split(", ");
+
+            if (producoes.length == 1 && verificaPonto(producoes[0]) == ""){
+                arrayResolvidos.push(producoes[0]);
+            }
+            else {
+                $.each(producoes, function(i, item){
+                    var simbolo= verificaPonto(item);
+                    var novaProducao = avancaPonto(item);
+                    var existe = false;
+                    $.each(goto, function(j, itemJ){
+                        if (itemJ.producoes == novaProducao) {
+                            existe = true;
+                        }
+                    });
+                    if (!existe) {
+                        goto.push(novoItemGoto(x, simbolo, novaProducao, gramatica));
+                    };
+                });
+            }
+        }
+
+        gramatica.terminais.push("$");
+
+        var arrayAcao = new Array(goto.length);
+        for (var i = 0; i < arrayAcao.length; i++) {
+            arrayAcao[i] = new Array(gramatica.terminais.length);
+        }
+
+        var arrayDesvio = new Array(goto.length);
+        for (var i = 0; i < arrayDesvio.length; i++) {
+            arrayDesvio[i] = new Array(gramatica.naoTerminais.length);
+        }
+
+        arrayAcao[1][$.inArray("$", gramatica.terminais)] = "Aceita";
+
+        for (var i = 1; i < goto.length; i++) {
+            
+            var NT = $.inArray(goto[i].simbolo, gramatica.naoTerminais);
+            var T = $.inArray(goto[i].simbolo, gramatica.terminais);
+
+            if (NT > -1){
+                arrayDesvio[goto[i].origem][NT] = i;
+            }
+            else {
+                arrayAcao[goto[i].origem][T] = "E" + i;
+            }
+        }
+
+        exibeTabelaSLR(arrayAcao, arrayDesvio, gramatica);
+
+        sessionStorage.setItem('acoes', JSON.stringify(arrayAcao));
+        sessionStorage.setItem('desvios', JSON.stringify(arrayDesvio));
+        sessionStorage.setItem('gramatica', JSON.stringify(gramatica));
+    }
+        
+    function novoItemGoto (orig, simb, prod, gramatica) {
+        return {origem: orig,
+                simbolo: simb,
+                producoes: closure(prod, gramatica)};
+    }
+
+    function closure(prod, gramatica) {
+
+        var producoes = prod.split(", ");
+        
+        for (var i = 0; i < producoes.length; i++) {
+            var simbolo = verificaPonto(producoes[i]);
+
+            if ($.inArray(simbolo, gramatica.naoTerminais) > -1) {
+                
+                $.each(gramatica.producoes, function(i, item){
+
+                    if (item.naoTerminais == simbolo) {
+                        var producao = item.naoTerminais + " -> " + item.complemento;
+                        if ($.inArray(producao, producoes) == -1) {
+                            producoes.push(producao);
+                        }
+                    }
+
+                });
+
+            }
+        }
+
+        prod = producoes[0];
+        for (var i = 1; i < producoes.length; i++) {
+            prod = prod + ", " + producoes[i];
+        }               
+
+        return prod;
+    }
+
+    function verificaPonto (producao) {
+        var simbolos = producao.split(" -> ")[1].split(" ");
+        var posicaoPonto = simbolos.indexOf(".");
+
+        if (posicaoPonto < simbolos.length - 1) {
+            return simbolos[posicaoPonto + 1]
+        }
+        else {
+            return "";
+        }
+    }
+
+    function avancaPonto(prod) {
+        var producao = prod.split(" -> ");
+        var simbolos = producao[1].split(" ");
+        var posicaoPonto = simbolos.indexOf(".");
+        simbolos[posicaoPonto] = simbolos[posicaoPonto + 1];
+        simbolos[posicaoPonto + 1] = ".";
+
+        prod = producao[0] + " -> " + simbolos[0];
+        for (var i = 1; i < simbolos.length; i++){
+            prod = prod + " " + simbolos[i];
+        }
+
+        return prod;
+    }
+
+    function formataProducao (prod) {
+        return prod.naoTerminais + " -> " + prod.complemento;
+    }
+
+    function exibeTabelaSLR(arrayAcao, arrayDesvio, gramatica) {
+        
+        var html = "<tr><th></th><th colspan='" + gramatica.terminais.length + "'>Ação</th><th colspan='" + gramatica.naoTerminais.length + "'>Desvio</th></tr>";
+
+        html += "<tr><th></th>";
+        
+        for (var i = 0; i < gramatica.terminais.length; i++) {
+            html += "<th>" + gramatica.terminais[i] + "</th>";
+        }
+        for (var i = 0; i < gramatica.naoTerminais.length; i++) {
+            html += "<th>" + gramatica.naoTerminais[i] + "</th>";
+        }
+
+        html += "</tr>";
+
+        for (var i = 0; i < arrayAcao.length; i++) {
+            html += "<tr><th>" + i + "</th>";
+
+            for (var j = 0; j < gramatica.terminais.length; j++) {
+                html += arrayAcao[i][j] != null ? "<td>" + arrayAcao[i][j] + "</td>" : "<td></td>";
+            }
+            for (var j = 0; j < gramatica.naoTerminais.length; j++) {
+                html += arrayDesvio[i][j] != null ? "<td>" + arrayDesvio[i][j] + "</td>" : "<td></td>";
+            }
+
+            html += "</tr>";
+        }
+        
+        
+        $("#table table tbody").text("");
+        $("#table table tbody").append(html);
+
+        $("#table").show();
+
+        $('html,body').animate({
+            scrollTop: $("#table").offset().top
+        }, 'slow');
+    }
+
+    /*********************** FIM DAS FUNÇÕES DE CRIAÇÃO DE TABELA ***********************/
 
 });
