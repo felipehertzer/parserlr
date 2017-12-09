@@ -22,9 +22,6 @@ $ (document).ready(function(){
             $("#status").html(status_valido);
         }
 
-        //formalismo
-        $('#formalismo').html(' G = ({ '+$(this).val().toUpperCase()+' }, { '+$('#terminais').val()+' }, '+$('#simboloConjunto').val()+', '+simbolo_inicio+')');
-
     }).keypress(function(e){
 
         // bloqueia a tecla espaco
@@ -36,20 +33,12 @@ $ (document).ready(function(){
         }
     }).keydown(function(e){
 
-        if (e.keyCode === 8) {
-            $(this).val($(this).val().slice(0, -3));
-            return false;
-        }
         //checa se ja existe no array
         if(temDuplicados($(this).val().split(", "))){
             $("#status").html(status_invalido);
         } else {
             $("#status").html(status_valido);
         }
-    });
-
-    $('#simbolo-inicio').on("change", function(){
-        $('#formalismo').html(' G = ({ '+$("#nao-terminais").val().toUpperCase()+' }, { '+$('#terminais').val()+' }, '+$('#simboloConjunto').val()+', '+ $(this).val().toUpperCase()+')');
     });
 
     $("#terminais").keyup(function(e){
@@ -60,25 +49,16 @@ $ (document).ready(function(){
             $("#status").html(status_valido);
         }
 
-        var simbolo_inicio = $('#simbolo-inicio').val().toUpperCase();
-        $('#formalismo').html(' G = ({ '+$("#nao-terminais").val().toUpperCase()+' }, { '+$(this).val().toLowerCase()+' }, '+$('#simboloConjunto').val()+', '+simbolo_inicio+')');
 
     }).keypress(function(e){
 
-        // bloqueia a tecla espaco
-        if (e.keyCode === 32) return false;
-        // adiciona a virgula automaticamente
-        if (e.which !== 0) {
+        if (e.keyCode === 32) {
             if ($(this).val().length > 0)
-                $(this).val($(this).val() + ", ");
+                $(this).val($(this).val() + " , ");
         }
 
     }).keydown(function(e){
 
-        if (e.keyCode === 8) {
-            $(this).val($(this).val().slice(0, -3));
-            return false;
-        }
         //checa se ja existe no array
         if(temDuplicados($(this).val().split(", "))){
             $("#status").html(status_invalido);
@@ -96,13 +76,6 @@ $ (document).ready(function(){
         }
     });
 
-    $(".complemento-producao").keyup(function(e){
-        if (e.keyCode === 32) {
-            if ($(this).val().length > 0)
-                $(this).val($(this).val() + "| ");
-        }
-    });
-
     //Da refresh na página
     $("button#refresh").on("click", function () {
         window.location.reload(true);
@@ -114,15 +87,9 @@ $ (document).ready(function(){
         $("#table").hide();
         $("#output").hide();
 
-        $("#nao-terminais").val("S, A, B");
-        //$("#nao-terminais").val("S, X, Y, Z");
-        //$("#nao-terminais").val("S, B, D");
-        //$("#nao-terminais").val("S, A, B, C, D");
+        $("#nao-terminais").val("S, A, E, C");
         
-        $("#terminais").val("a, b, c");
-        //$("#terminais").val("a, b, c, d, e, f");
-        //$("#terminais").val("a, b, c, d");
-        //$("#terminais").val("a, b, c, d");
+        $("#terminais").val("for , ( , ; , ) , id , = , oprel");
         
         $("#terminais").prop("disabled", false);
 
@@ -134,10 +101,8 @@ $ (document).ready(function(){
             }));
         });
 
-        var producoes = [{NT: "S", T: "cAa"}, {NT: "A", T: "cB | B"}, {NT: "B", T: "bcB | &"}];
-        //var producoes = [{NT: "S", T: "XYZ"}, {NT: "X", T: "aXb | &"}, {NT: "Y", T: "cYZcX | d"}, {NT: "Z", T: "eZYe | f"}];
-        //var producoes = [{NT: "S", T: "aB | d"}, {NT: "B", T: "cDb | &"}, {NT: "D", T: "a | & | dSD"}];
-        //var producoes = [{NT: "S", T: "BA"}, {NT: "A", T: "aBA | &"}, {NT: "B", T: "DC"}, {NT: "C", T: "bDC | &"}, {NT: "D", T: "cD | d"}];
+        var producoes = [{NT: "S", T: "for ( A ; E ) C"}, {NT: "A", T: "id = id"}, {NT: "E", T: "id oprel id"}, {NT: "C", T: "A"}, {NT: "C", T: "S"}];
+
         $('.duplicar').remove();
         var html = "";
         $.each(producoes, function (i, item) {
