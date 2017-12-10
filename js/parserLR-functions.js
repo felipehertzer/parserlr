@@ -36,7 +36,9 @@ $(document).ready(function () {
 
             /***************************************************************************/
 
-            construcaoTabelaSLR(gramatica);            
+            construcaoTabelaSLR(gramatica);
+
+            reducao(gramatica);
 
         }
 
@@ -48,7 +50,10 @@ $(document).ready(function () {
         var arrayDesvio = JSON.parse(sessionStorage.getItem('desvios'));
         var gramatica = JSON.parse(sessionStorage.getItem('gramatica'));
 
-        //Contrói e exibe tabela
+        var html = construcaoTabelaAnalisar(arrayAcao, arrayDesvio, gramatica);
+
+        $("#output").css("display", "block");
+        $(".saida").html(html);
     });
 
     /*********************** FUNÇÕES DE FIRST E FOLLOW ***********************/
@@ -178,6 +183,7 @@ $(document).ready(function () {
         //Buscar follow de todos os não-terminais e armazenar no objeto aqui
         var firstIndex = gramatica.producoes.findIndex(x => x.naoTerminais == simbolo);
         //Inicializa o atributo follow para o símbolo analisado
+
         if (gramatica.follow[firstIndex] === undefined) {
             gramatica.follow[firstIndex] = {};
             gramatica.follow[firstIndex].naoTerminal = simbolo;
@@ -311,6 +317,7 @@ $(document).ready(function () {
         sessionStorage.setItem('acoes', JSON.stringify(arrayAcao));
         sessionStorage.setItem('desvios', JSON.stringify(arrayDesvio));
         sessionStorage.setItem('gramatica', JSON.stringify(gramatica));
+        sessionStorage.setItem('goto', JSON.stringify(goto));
     }
         
     function novoItemGoto (orig, simb, prod, gramatica) {
@@ -421,5 +428,87 @@ $(document).ready(function () {
     }
 
     /*********************** FIM DAS FUNÇÕES DE CRIAÇÃO DE TABELA ***********************/
+    function reducao(gramatica){
+        gramatica.first = [];
+        gramatica.follow = [];
+        var count = 0;
 
+        /*var arrayAcaoInside = []
+        $.each(gramatica.naoTerminais, function (a, b) {
+            var result = buscaFollow(gramatica, b);
+            $.each(result.split(','), function (x, y) {
+
+            });
+        });*/
+
+        /*var arrayAcao = JSON.parse(sessionStorage.getItem('acoes'));
+        for (var i = 0; i < arrayAcao.length; i++) {
+            for (var j = 0; j < gramatica.terminais.length; j++) {
+                arrayAcao[i][j] = "r"+count++;
+            }
+        }
+        sessionStorage.setItem('acoes', JSON.stringify(arrayAcao));*/
+    }
+
+    function construcaoTabelaAnalisar(arrayAcao, arrayDesvio, gramatica) {
+        var passos = 1;
+        var pilha = ["0"];
+        var sentenca =  $("#sentenca").val().split(" ");
+        sentenca.push("$");
+        var html = "<table class='table table-bordered table-hover table-striped'>";
+        html += "<thead><tr><th>Pilha</th><th>Fita de Entrada</th><th>Ação</th></tr></thead><tbody>";
+
+        while(true) {
+
+            var keyInput = Object.keys(gramatica.terminais).filter(function (key) {
+                return gramatica.terminais[key] === sentenca[0]
+            })[0];
+            var action = arrayAcao[pilha[pilha.length - 1]][keyInput];
+            console.log(action+" - "+pilha[pilha.length - 1]+" - "+keyInput);
+            if (!action) {
+                html += tdTabelaAnalisar(passos, pilha, sentenca, 'E');
+                break;
+            }
+
+            if (action === 'Aceita') {
+                html += tdTabelaAnalisar(passos, pilha, sentenca, 'A');
+                break;
+            }
+
+            var n = parseInt(action.substr(1), 10);
+
+            if (action.indexOf("E") !== -1) {
+                pilha.push(sentenca[0], n);
+                html += tdTabelaAnalisar(passos, pilha, sentenca, 'S');
+                sentenca.shift();
+            }
+
+            if (action.indexOf("R") !== -1) {
+                // pega a producao de acordo com o n
+                for(var i=0; i < desvio * 2; i++){
+                    pilha.pop();
+                }
+                //trocar sentenca pela producao esquerda
+                var keyNaoTerminais = Object.keys(gramatica.naoTerminais).filter(function (key) {
+                    return gramatica.naoTerminais[key] === sentenca[0]
+                })[0];
+                var desvio = arrayDesvio[pilha[pilha.length - 1]][keyNaoTerminais];
+                if(!desvio){
+                    html += tdTabelaAnalisar(passos, pilha, sentenca, 'E');
+                    break;
+                }
+                html += tdTabelaAnalisar(passos, pilha, sentenca, 'Reduz ');
+            }
+        }
+        html += "</tbody></table>";
+        return html;
+    }
+
+    function tdTabelaAnalisar(passos, pilha, sentenca, acao){
+        var html ="<tr>";
+        html +="<td>"+pilha.join(" ")+"</td>";
+        html +="<td>"+sentenca.join(" ")+"</td>";
+        html +="<td>"+(acao === 'E' ? "ERRO" : (acao === 'S' ? "Empilha" : (acao === 'A' ? "Aceita" : acao)))+"</td></tr>";
+        return html;
+    }
 });
