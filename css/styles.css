@@ -38,7 +38,13 @@ ul.dicas{
 #table td,
 #table th {
     text-align: center;
+    font-size: 14px;
  }
+
+ #table #goto td,
+ #table #goto th {
+     text-align: left;
+  }
 
 #status-final {
     margin-bottom: 10px;

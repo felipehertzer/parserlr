@@ -101,26 +101,38 @@
         </div>
 
         <hr>
-        <div id="first-follow" class="row" style="display: none;">
-            <div class="col-xs-12 col-sm-6">
-                <h4>First</h4>
-                <ul id="first"></ul>
-            </div>
-            <div class="col-xs-12 col-sm-6">
-                <h4>Follow</h4>
-                <ul id="follow"></ul>
-            </div>
-        </div>
-
-        <hr>
         <div id="table" class="row" style="display: none;">
             <div class="col-xs-12 grammar-output">
-                <h4>Tabela</h4>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <tbody>
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-sm-9">
+                        <h4>Criação de Conjuntos Canônicos</h4>
+                        <h5>(Ação Empilha)</h5>
+                        <div class="table-responsive">
+                            <table id="goto" class="table table-bordered">
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <h4>Follows dos NT</h4>
+                        <h5>(Utilizados para Ação Reduzir)</h5>
+                        <div class="table-responsive">
+                            <ul id="follow">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h4>Tabela SLR</h4>
+                        <div class="table-responsive">
+                            <table id="slr" class="table table-bordered">
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-xs-12 col-sm-8">
