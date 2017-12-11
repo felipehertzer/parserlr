@@ -25,16 +25,21 @@ $(document).ready(function () {
             gramatica["naoTerminais"] = gramatica["naoTerminais"].replace(/\s/g, '').split(",");
             gramatica["terminais"] = gramatica["terminais"].replace(/\s/g, '').split(",");
             
+            gramatica = separaProducoes(gramatica);
 
             /***************************************************************************/
 
             // REALIZAR CHAMADA DA BUSCA DOS FOLLOW AQUI
             // COMENTAR TRECHO ABAIXO
 
-            var follows = [{NT: "S", follow: "$"},
+            /*var follows = [{NT: "S", follow: "$"},
                             {NT: "A", follow: ";|$"},
                             {NT: "E", follow: ")"},
-                            {NT: "C", follow: "$"}];
+                            {NT: "C", follow: "$"}];*/
+
+            var follows = [{NT: "E", follow: "+|)|$"},
+                            {NT: "T", follow: "+|*|)|$"},
+                            {NT: "F", follow: "+|*|)|$"}];
 
             /***************************************************************************/
 
@@ -547,6 +552,37 @@ $(document).ready(function () {
         $('html,body').animate({
             scrollTop: $("#table").offset().top
         }, 'slow');
+    }
+
+    function separaProducoes (gramatica) {
+        // Separa NT que possuem mais de uma produção na mesma linha em linhas diferente
+
+        // Percorre lista de produções
+        for (var x = 0; x < gramatica.producoes.length; x++) {
+
+            // Se possui mais de uma produção
+            if (gramatica.producoes[x].complemento.indexOf(" | ") > -1) {
+
+                // Separa produções
+                var producoes = gramatica.producoes[x].complemento.split(" | ");
+                var arrayProducoes = [];
+
+                // Gera produções separadas
+                for (var i = 0; i < producoes.length; i++) {
+                    arrayProducoes.push( {naoTerminais: gramatica.producoes[x].naoTerminais, complemento: producoes[i]} );
+                }
+
+                // Insere produções individuais no lugar da original
+                gramatica.producoes.splice(x, 1);
+                for (var i = 0; i < producoes.length; i++) {
+                    gramatica.producoes.splice(x + i, 0, arrayProducoes[i]);
+                }
+                
+            }
+        }
+
+        // Retorna gramática atualizada
+        return gramatica;
     }
 
     /*********************** FIM DAS FUNÇÕES DE CRIAÇÃO DE TABELA ***********************/

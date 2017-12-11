@@ -87,9 +87,11 @@ $ (document).ready(function(){
         $("#table").hide();
         $("#output").hide();
 
-        $("#nao-terminais").val("S, A, E, C");
-        
-        $("#terminais").val("for , ( , ; , ) , id , = , oprel");
+        /*$("#nao-terminais").val("S, A, E, C"); 
+        $("#terminais").val("for , ( , ; , ) , id , = , oprel");*/
+
+        $("#nao-terminais").val("E, T, F"); 
+        $("#terminais").val("+ , * , ( , ) , id");
         
         $("#terminais").prop("disabled", false);
 
@@ -101,7 +103,8 @@ $ (document).ready(function(){
             }));
         });
 
-        var producoes = [{NT: "S", T: "for ( A ; E ) C"}, {NT: "A", T: "id = id"}, {NT: "E", T: "id oprel id"}, {NT: "C", T: "A"}, {NT: "C", T: "S"}];
+        /*var producoes = [{NT: "S", T: "for ( A ; E ) C"}, {NT: "A", T: "id = id"}, {NT: "E", T: "id oprel id"}, {NT: "C", T: "A | S"}];*/
+        var producoes = [{NT: "E", T: "E + T | T"}, {NT: "T", T: "T * F | F"}, {NT: "F", T: "( E ) | id"}];
 
         $('.duplicar').remove();
         var html = "";
