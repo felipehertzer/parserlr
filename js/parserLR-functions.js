@@ -51,7 +51,7 @@ $(document).ready(function () {
         var arrayDesvio = JSON.parse(sessionStorage.getItem('desvios'));
         var gramatica = JSON.parse(sessionStorage.getItem('gramatica'));
 
-        var html = construcaoTabelaAnalisar(arrayAcao, arrayDesvio, gramatica);
+        var html = construcaoTabelaAnalisar(arrayAcao, arrayDesvio, gramatica, arrayResolvidos);
 
         $("#output").css("display", "block");
         $(".saida").html(html);
@@ -269,12 +269,12 @@ $(document).ready(function () {
 
             // Divide diversas produções de um mesmo índice do array
             var producoes = goto[x].producoes.split(", ");
-
+            arrayResolvidos.push({passo: x, producao: producoes[0]});
             // Se item do array Goto possuir apenas uma produção e ele já estiver resolvido
             // Adiciona no array de produções resolvida, armazenado em qual passo foi realizado
             if (producoes.length == 1 && verificaPonto(producoes[0]) == ""){
                 if (!producoes[0].startsWith(gramatica.simboloInicio+"'")) {
-                    arrayResolvidos.push({passo: x, producao: producoes[0]});
+
                 }                
             }
 
@@ -552,7 +552,7 @@ $(document).ready(function () {
     /*********************** FIM DAS FUNÇÕES DE CRIAÇÃO DE TABELA ***********************/
 
 
-    function construcaoTabelaAnalisar(arrayAcao, arrayDesvio, gramatica) {
+    function construcaoTabelaAnalisar(arrayAcao, arrayDesvio, gramatica, arrayResolvidos) {
         var passos = 1;
         var pilha = ["0"];
         var sentenca =  $("#sentenca").val().split(" ");
@@ -580,26 +580,31 @@ $(document).ready(function () {
             var n = parseInt(action.substr(1), 10);
 
             if (action.indexOf("E") !== -1) {
-                pilha.push(sentenca[0], n);
                 html += tdTabelaAnalisar(passos, pilha, sentenca, 'S');
+                pilha.push(sentenca[0], n);
                 sentenca.shift();
             }
 
             if (action.indexOf("R") !== -1) {
-                // pega a producao de acordo com o n
-                for(var i=0; i < desvio * 2; i++){
-                    pilha.pop();
-                }
-                //trocar sentenca pela producao esquerda
+
+                var producao = arrayResolvidos[n].producao.replace(".", "");
+                var producaoLeft = producao.split("->")[0].trim();
+
                 var keyNaoTerminais = Object.keys(gramatica.naoTerminais).filter(function (key) {
-                    return gramatica.naoTerminais[key] === sentenca[0]
+                    return gramatica.naoTerminais[key] === producaoLeft
                 })[0];
+
                 var desvio = arrayDesvio[pilha[pilha.length - 1]][keyNaoTerminais];
+
                 if(!desvio){
                     html += tdTabelaAnalisar(passos, pilha, sentenca, 'E');
                     break;
                 }
-                html += tdTabelaAnalisar(passos, pilha, sentenca, 'Reduz ');
+                html += tdTabelaAnalisar(passos, pilha, sentenca, 'Reduz '+producao);
+                for(var i=0; i < 2; i++){
+                    pilha.pop();
+                }
+                pilha.push(producaoLeft, desvio);
             }
         }
         html += "</tbody></table>";
