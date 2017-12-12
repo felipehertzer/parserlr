@@ -267,47 +267,48 @@ $(document).ready(function () {
         var arrayResolvidos = [];
     
         // Insere produção inicial no array
-        goto.push(novoItemGoto(null,null, formataProducao(gramatica.producoes[0]), gramatica));
+        goto.push(novoItemGoto(null,null, formataProducao(gramatica.producoes[0]), gramatica, null));
+        arrayResolvidos.push(novoItemGoto(null,null, formataProducao(gramatica.producoes[0]), gramatica, null));
 
         // Resolve cada item da lista de Goto
         for (var x = 0; x < goto.length; x++){
 
             // Divide diversas produções de um mesmo índice do array
-            var producoes = goto[x].producoes.split(", ");
-            arrayResolvidos.push({passo: x, producao: producoes[0]});
-            // Se item do array Goto possuir apenas uma produção e ele já estiver resolvido
-            // Adiciona no array de produções resolvida, armazenado em qual passo foi realizado
-            if (producoes.length == 1 && verificaPonto(producoes[0]) == ""){
-                if (!producoes[0].startsWith(gramatica.simboloInicio+"'")) {
+            var producoes = goto[x].producoes.split(", ");           
+            
+            var tempResolvidos = [];
 
-                }                
-            }
+            // Para cada produção do item
+            $.each(producoes, function(i, item){
 
-            // Se ainda não estiver resolvido
-            else {
-                // Para cada produção do item
-                $.each(producoes, function(i, item){
+                // Verifica o símbolo que se encontra após o ponto
+                var simbolo= verificaPonto(item);
 
-                    // Verifica o símbolo que se encontra após o ponto
-                    var simbolo= verificaPonto(item);
+                if (tempResolvidos.indexOf(item) == -1 && simbolo != "") {
+
+                    tempResolvidos.push(item);                      
 
                     // Avança o ponto para a próxima posição
                     var novaProducao = avancaPonto(item);
 
-                    // Verifica no array de goto se esta produção já foi inserida
-                    var existe = false;
-                    $.each(goto, function(j, itemJ){
-                        if (itemJ.producoes == novaProducao) {
-                            existe = true;
+                    for (var j = i + 1; j < producoes.length; j++) {
+                        //var gotoIndex = existeGoto(avancaPonto(producoes[j]), goto);
+                        if (verificaPonto(producoes[j]) == simbolo) {
+                            novaProducao += novaProducao != "" ? ", " + avancaPonto(producoes[j]) : avancaPonto(producoes[j]);
+                            tempResolvidos.push(producoes[j]);
                         }
-                    });
+                    }                        
 
-                    // Caso não tenha sido inserida, adiciona novo item, com produção atualizada
-                    if (!existe) {
-                        goto.push(novoItemGoto(x, simbolo, novaProducao, gramatica));
-                    };
-                });
-            }
+                    if (novaProducao != "") {
+                        var gotoIndex = existeGoto(novaProducao, goto);
+                        if (gotoIndex == -1) {
+                            goto.push(novoItemGoto(x, simbolo, novaProducao, gramatica, x));
+                        }
+                        var gotoIndex = existeGoto(novaProducao, goto);
+                        arrayResolvidos.push(novoItemGoto(x, simbolo, novaProducao, gramatica, gotoIndex));
+                    }                        
+                }                    
+            });
         }
 
         ////////////////// INÍCIO DA ESTRUTURAÇÃO DA TABELA //////////////////
@@ -333,18 +334,18 @@ $(document).ready(function () {
         /// INSERÇÃO DE AÇÕES EMPILHA E DESVIOS ///
 
         // Percorre cada item do array Goto
-        for (var i = 1; i < goto.length; i++) {
+        for (var i = 1; i < arrayResolvidos.length; i++) {
             
-            var NT = $.inArray(goto[i].simbolo, gramatica.naoTerminais);
-            var T = $.inArray(goto[i].simbolo, gramatica.terminais);
+            var NT = $.inArray(arrayResolvidos[i].simbolo, gramatica.naoTerminais);
+            var T = $.inArray(arrayResolvidos[i].simbolo, gramatica.terminais);
 
             // Se goto estiver tratando um NT, adiciona na respectiva posição do array de Desvios
             if (NT > -1){
-                arrayDesvio[goto[i].origem][NT] = i;
+                arrayDesvio[arrayResolvidos[i].origem][NT] = arrayResolvidos[i].passo;
             }
             // Se goto estiver tratando um T, adiciona na respectiva posição do array de Ações com ação de empilhar
             else {
-                arrayAcao[goto[i].origem][T] = "E" + i;
+                arrayAcao[arrayResolvidos[i].origem][T] = "E" + arrayResolvidos[i].passo;
             }
         }
 
@@ -364,7 +365,13 @@ $(document).ready(function () {
             var prod = formataProducao(producao);
 
             // Busca no array de resolvidos em que passo a produção foi resolvida
-            var indexResolvido = arrayResolvidos[ arrayResolvidos.map(function(elemento) { return elemento.producao;}).indexOf(prod) ].passo;
+            var indexResolvido = null;
+            for (var x = 0; x < arrayResolvidos.length; x++) {
+                if ( arrayResolvidos[x].producoes.indexOf(prod) > -1 ) {
+                    indexResolvido = arrayResolvidos[x].passo;
+                    break;
+                }
+            }
 
             // Pega todos os follows do respectivo NT
             var ntFollows = follows[ follows.map(function(elemento) {return elemento.NT;}).indexOf(producao.naoTerminais) ].follow.split("|");
@@ -378,7 +385,7 @@ $(document).ready(function () {
         ////////////////// FIM DA ESTRUTURAÇÃO DA TABELA //////////////////
 
         // Chama função que exibe tabela e outras informações na tela
-        exibeTabelaSLR(arrayAcao, arrayDesvio, gramatica, goto, follows);        
+        exibeTabelaSLR(arrayAcao, arrayDesvio, gramatica, arrayResolvidos, follows);        
 
         // Armazena informações em variáveis de sessão do navegador para serem utilizados na verificação
         sessionStorage.setItem('resolvidos', JSON.stringify(arrayResolvidos));
@@ -388,11 +395,12 @@ $(document).ready(function () {
         sessionStorage.setItem('goto', JSON.stringify(goto));
     }
         
-    function novoItemGoto (orig, simb, prod, gramatica) {
+    function novoItemGoto (orig, simb, prod, gramatica, passo) {
         // Padroniza itens do array de Goto
         return {origem: orig,
                 simbolo: simb,
-                producoes: closure(prod, gramatica)};
+                producoes: closure(prod, gramatica),
+                passo: passo};
     }
 
     function closure(prod, gramatica) {
@@ -484,14 +492,22 @@ $(document).ready(function () {
         return prod.naoTerminais + " -> " + prod.complemento;
     }
 
-    function exibeTabelaSLR(arrayAcao, arrayDesvio, gramatica, goto, follows) {
+    function exibeTabelaSLR(arrayAcao, arrayDesvio, gramatica, arrayResolvidos, follows) {
 
         ////////////////// Exibe passos da criação dos conjuntos canônicos //////////////////
 
-        var html = "<tr><td>I0 = { " + goto[0].producoes + " }</td></tr>";
+        var exibidos = [0];
+        var html = "<tr><td>I0 = { " + arrayResolvidos[0].producoes + " }</td></tr>";
 
-        for (var i = 1; i < goto.length; i++) {
-            html += "<tr><td>goto( I" + goto[i].origem + " , " + goto[i].simbolo + " ) = I" + i + " = { " + goto[i].producoes + " }</td></tr>";
+        for (var i = 1; i < arrayResolvidos.length; i++) {
+            if (exibidos.indexOf(arrayResolvidos[i].passo) > -1) {
+                html += "<tr><td>goto( I" + arrayResolvidos[i].origem + " , " + arrayResolvidos[i].simbolo + " ) = { " + arrayResolvidos[i].producoes + " } <strong>Resolvido em I" + arrayResolvidos[i].passo + "</strong></td></tr>";
+            }
+            else {
+                html += "<tr><td><strong>I" + arrayResolvidos[i].passo + "</strong> = goto( I" + arrayResolvidos[i].origem + " , " + arrayResolvidos[i].simbolo + " ) = { " + arrayResolvidos[i].producoes + " }</td></tr>";
+                exibidos.push(arrayResolvidos[i].passo);
+            }
+            
         }
 
         $("#table table#goto tbody").text("");
@@ -583,6 +599,18 @@ $(document).ready(function () {
 
         // Retorna gramática atualizada
         return gramatica;
+    }
+
+    function existeGoto (novaProducao, goto) {
+        // Verifica no array de goto se esta produção já foi inserida
+        var existe = -1;
+        $.each(goto, function(j, itemJ){
+            if (itemJ.producoes == novaProducao || itemJ.producoes.indexOf(novaProducao) > -1) {
+                existe = j;
+            }
+        });
+
+        return existe;
     }
 
     /*********************** FIM DAS FUNÇÕES DE CRIAÇÃO DE TABELA ***********************/

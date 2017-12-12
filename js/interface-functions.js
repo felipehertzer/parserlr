@@ -91,7 +91,7 @@ $ (document).ready(function(){
         $("#terminais").val("for , ( , ; , ) , id , = , oprel");*/
 
         $("#nao-terminais").val("E, T, F"); 
-        $("#terminais").val("+ , * , ( , ) , id");
+        $("#terminais").val("id , + , * , ( , )");
         
         $("#terminais").prop("disabled", false);
 
