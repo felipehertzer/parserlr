@@ -630,7 +630,7 @@ $(document).ready(function () {
                 return gramatica.terminais[key] === sentenca[0]
             })[0];
             var action = arrayAcao[pilha[pilha.length - 1]][keyInput];
-            console.log(action+" - "+pilha[pilha.length - 1]+" - "+keyInput);
+
             if (!action) {
                 html += tdTabelaAnalisar(passos, pilha, sentenca, 'E');
                 break;
@@ -650,9 +650,13 @@ $(document).ready(function () {
             }
 
             if (action.indexOf("R") !== -1) {
+                var producao = gramatica.producoes[n-1].complemento.replace(".", "");
+                var producaoLeft = gramatica.producoes[n-1].naoTerminais.trim();
+                html += tdTabelaAnalisar(passos, pilha, sentenca, 'Reduz '+producaoLeft+" -> "+producao);
 
-                var producao = arrayResolvidos[n].producao.replace(".", "");
-                var producaoLeft = producao.split("->")[0].trim();
+                for(var i=0; i < producao.trim().split(" ").length * 2; i++){
+                    pilha.pop();
+                }
 
                 var keyNaoTerminais = Object.keys(gramatica.naoTerminais).filter(function (key) {
                     return gramatica.naoTerminais[key] === producaoLeft
@@ -664,10 +668,7 @@ $(document).ready(function () {
                     html += tdTabelaAnalisar(passos, pilha, sentenca, 'E');
                     break;
                 }
-                html += tdTabelaAnalisar(passos, pilha, sentenca, 'Reduz '+producao);
-                for(var i=0; i < 2; i++){
-                    pilha.pop();
-                }
+
                 pilha.push(producaoLeft, desvio);
             }
         }
