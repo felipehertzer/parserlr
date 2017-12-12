@@ -108,7 +108,7 @@
                         <h4>Criação de Conjuntos Canônicos</h4>
                         <h5>(Ação Empilha)</h5>
                         <div class="table-responsive">
-                            <table id="goto" class="table table-bordered">
+                            <table id="goto" class="table table-bordered table-hover table-striped">
                                 <tbody>
                                 </tbody>
                             </table>
@@ -117,9 +117,15 @@
                     <div class="col-sm-3">
                         <h4>Follows dos NT</h4>
                         <h5>(Utilizados para Ação Reduzir)</h5>
-                        <div class="table-responsive">
+                        <div>
                             <ul id="follow">
                             </ul>
+                        </div>
+                        <br>
+                        <h4>Produções</h4>
+                        <div>
+                            <ol id="listaProducoes">
+                            </ol>
                         </div>
                     </div>
                 </div>
@@ -127,7 +133,7 @@
                     <div class="col-xs-12">
                         <h4>Tabela SLR</h4>
                         <div class="table-responsive">
-                            <table id="slr" class="table table-bordered">
+                            <table id="slr" class="table table-bordered table-hover table-striped">
                                 <tbody>
                                 </tbody>
                             </table>
@@ -138,7 +144,7 @@
                     <div class="col-xs-12 col-sm-8">
                         <div id="form-sentenca" class="form-group">
                             <label class="control-label">Sentença a ser verificada:</label>
-                            <input type="text" class="form-control" placeholder="cbca" id="sentenca" name="sentenca">
+                            <input type="text" class="form-control" placeholder="( id + id )" id="sentenca" name="sentenca">
                         </div>
                     </div>
                     <div class="col-xs-12 col-sm-4">
@@ -170,15 +176,13 @@
                 </div>
                 <div class="modal-body">
                     <h4>Passos para utilização:</h4>
-                    <code>Atualizar passos de utilização</code>
-                    <!--<ol class="dicas">
+                    <ol class="dicas">
                         <li>Insira uma gramática (a gramática não pode ser ambígua e nem possuir recursão à esquerda)</li>
-                        <li>Pressione o botão "Montar Tabela", onde serão gerados os <em>firsts</em> e <em>follows</em> da gramática inserida
-                            e será montada a tabela para realização da análise.</li>
-                        <li>Juntamente aos <em>firsts</em> e <em>follows</em> da gramática e da tabela gerada, será exibido um campo para a entrada de uma sentença a ser reconhecida na gramática.<br>
+                        <li>Pressione o botão "Montar Tabela", onde será montada a tabela para realização da análise.</li>
+                        <li>Juntamente a tabela gerada, será exibido um campo para a entrada de uma sentença a ser reconhecida na gramática.<br>
                             Insira a sentença desejada e pressione o botão "Analisar".</li>
                         <li>Será exibida uma tabela com o passo a passo do reconhecimento.</li>
-                    </ol>-->
+                    </ol>
                     <br>
                     <h4>Representações:</h4>
                     <ul class="dicas">

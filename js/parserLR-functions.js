@@ -60,6 +60,8 @@ $(document).ready(function () {
 
         $("#output").css("display", "block");
         $(".saida").html(html);
+
+        $('html,body').animate({ scrollTop: $("#output").offset().top }, 'slow');
     });
 
     /*********************** FUNÇÕES DE FIRST E FOLLOW ***********************/
@@ -532,6 +534,21 @@ $(document).ready(function () {
         $("ul#follow").text("");
         $("ul#follow").append(html);
 
+        ////////////////// Exibe Produções Separadas da Gramática //////////////////
+
+        var html = "";
+        
+        for (var i = 0; i < gramatica.producoes.length; i++) {
+            gramatica.producoes[i].complemento = gramatica.producoes[i].complemento.substring(0, gramatica.producoes[i].complemento.length - 2)
+            html += "<li>" + formataProducao(gramatica.producoes[i]) + "</li>";
+
+        }       
+
+        $("ol#listaProducoes").text("");
+        $("ol#listaProducoes").append(html);
+
+        
+
         ////////////////// Exibe tabela construída //////////////////
 
         var html = "<tr><th></th><th colspan='" + gramatica.terminais.length + "'>Ação</th><th colspan='" + gramatica.naoTerminais.length + "'>Desvio</th></tr>";
@@ -565,9 +582,7 @@ $(document).ready(function () {
 
         $("#table").show();
 
-        $('html,body').animate({
-            scrollTop: $("#table").offset().top
-        }, 'slow');
+        $('html,body').animate({ scrollTop: $("#table").offset().top }, 'slow');
     }
 
     function separaProducoes (gramatica) {
@@ -644,7 +659,7 @@ $(document).ready(function () {
             var n = parseInt(action.substr(1), 10);
 
             if (action.indexOf("E") !== -1) {
-                html += tdTabelaAnalisar(passos, pilha, sentenca, 'S');
+                html += tdTabelaAnalisar(n, pilha, sentenca, 'S');
                 pilha.push(sentenca[0], n);
                 sentenca.shift();
             }
@@ -679,8 +694,8 @@ $(document).ready(function () {
     function tdTabelaAnalisar(passos, pilha, sentenca, acao){
         var html ="<tr>";
         html +="<td>"+pilha.join(" ")+"</td>";
-        html +="<td>"+sentenca.join(" ")+"</td>";
-        html +="<td>"+(acao === 'E' ? "ERRO" : (acao === 'S' ? "Empilha" : (acao === 'A' ? "Aceita" : acao)))+"</td></tr>";
+        html +="<td style='text-align: right'>"+sentenca.join(" ")+"</td>";
+        html +="<td>"+(acao === 'E' ? "ERRO" : (acao === 'S' ? "Empilha E"+passos : (acao === 'A' ? "Aceita" : acao)))+"</td></tr>";
         return html;
     }
 });
