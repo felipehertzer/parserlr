@@ -592,57 +592,62 @@ $(document).ready(function () {
         html += "<thead><tr><th>Pilha</th><th>Fita de Entrada</th><th>Ação</th></tr></thead><tbody>";
 
         while(true) {
-
+            // busca a key do item nos terminais
             var keyInput = Object.keys(gramatica.terminais).filter(function (key) {
                 return gramatica.terminais[key] === sentenca[0]
             })[0];
             var action = arrayAcao[pilha[pilha.length - 1]][keyInput];
-
+            // se nao houver acoes retorna erro
             if (!action) {
                 html += tdTabelaAnalisar(passos, pilha, sentenca, 'E');
                 break;
             }
-
+            // se na tabela o elemento for aceite
             if (action === 'Aceita') {
+                // retorna a parte da tabela de analisar
                 html += tdTabelaAnalisar(passos, pilha, sentenca, 'A');
                 break;
             }
-
+            // pega o numero que tem ao lado da letra na tabela
             var n = parseInt(action.substr(1), 10);
-
+            // se for empilhar
             if (action.indexOf("E") !== -1) {
                 html += tdTabelaAnalisar(n, pilha, sentenca, 'S');
+                // adiciona a sentença e o numero na pilha
                 pilha.push(sentenca[0], n);
+                // remove o primeiro elemento da sentença
                 sentenca.shift();
             }
-
+            // reducao
             if (action.indexOf("R") !== -1) {
+                // busca a producao completa
                 var producao = gramatica.producoes[n-1].complemento.replace(".", "");
+                // busca lado esquerdo producao
                 var producaoLeft = gramatica.producoes[n-1].naoTerminais.trim();
                 html += tdTabelaAnalisar(passos, pilha, sentenca, 'Reduz '+producaoLeft+" -> "+producao);
-
+                // remove elementos da pilha de acordo com quantidade de producoes
                 for(var i=0; i < producao.trim().split(" ").length * 2; i++){
                     pilha.pop();
                 }
-
+                // busca key da producao esquerda
                 var keyNaoTerminais = Object.keys(gramatica.naoTerminais).filter(function (key) {
                     return gramatica.naoTerminais[key] === producaoLeft
                 })[0];
-
+                // busca numero na tabela de desvio
                 var desvio = arrayDesvio[pilha[pilha.length - 1]][keyNaoTerminais];
-
+                // se nao houver desvio retorna erro
                 if(!desvio){
                     html += tdTabelaAnalisar(passos, pilha, sentenca, 'E');
                     break;
                 }
-
+                // adiciona na pilha a producao esquerda mais o numero do desvio
                 pilha.push(producaoLeft, desvio);
             }
         }
         html += "</tbody></table>";
         return html;
     }
-
+    // funcao para criar linha da tabela apenas visual
     function tdTabelaAnalisar(passos, pilha, sentenca, acao){
         var html ="<tr>";
         html +="<td>"+pilha.join(" ")+"</td>";
