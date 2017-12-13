@@ -31,17 +31,6 @@ $(document).ready(function () {
             // Busca de follows dos NTs da gramática informada
             var follows = buscaFirstFollow(gramatica);
             
-            /*var follows = [{NT: "S", follow: "$"},
-                            {NT: "A", follow: ";|$"},
-                            {NT: "E", follow: ")"},
-                            {NT: "C", follow: "$"}];*/
-
-            /*
-            var follows = [{NT: "E", follow: "+|)|$"},
-                            {NT: "T", follow: "+|*|)|$"},
-                            {NT: "F", follow: "+|*|)|$"}];
-            */
-            
             // Construção da tabela utilizada na verificação
             construcaoTabelaSLR(gramatica, follows);
         }
@@ -91,22 +80,15 @@ $(document).ready(function () {
             first = buscaFirst(gramatica, first, gramatica.producoes[i].naoTerminais, gramatica.producoes[i].complemento);
         }
         //Chama função que percorre as produções, gerando o follow dos terminais
-        follow = buscaFollow(gramatica, follow);
-        /*
-        for(var g = 0; g < first.length; g++){
-            alert('first[' + g + '].NT: '     + first[g].NT
-              +'\n first[' + g + '].first: '  + first[g].first
-              +'\n follow['+ g + '].NT: '     + follow[g].NT
-              +'\n follow['+ g + '].follow: ' + follow[g].follow);
-        }
-        */
+        follow = buscaFollow(gramatica, follow, first);
+
         return follow;
     }
 
     var controlNullFollow = [];
 
     // Busca os follows da gramática
-    function buscaFollow(gramatica, follow) {
+    function buscaFollow(gramatica, follow, first) {
         for(var t = 0; t < gramatica.naoTerminais.length; t++){
             for(var q = 0; q < gramatica.producoes.length; q++){
                 if(gramatica.producoes[q].complemento.indexOf(follow[t].NT) > -1){
@@ -172,29 +154,35 @@ $(document).ready(function () {
         
         if(gramatica.terminais.indexOf(terminaisArray[0]) > -1){
             
-            first[index].first += first[index].first == '' ? terminaisArray[0] : ('|' + terminaisArray[0])     
+            first[index].first = first[index].first == '' ? terminaisArray[0] : (first[index].first + '|' + terminaisArray[0])     
             
         } else if(gramatica.naoTerminais.indexOf(terminaisArray[0]) > -1 && terminaisArray[0] !== naoTerminais){
             indexAux = gramatica.naoTerminais.indexOf(terminaisArray[0]);
-            if (first[indexAux].first !== undefined) {
+            if (first[indexAux].first !== "") {
                 first[index].first += first[index].first == '' ? first[indexAux].first : ('|' + first[indexAux].first);
-            } else if (first[indexAux].first === undefined) {
+            } else if (first[indexAux].first === "") {
                 controlNullFirst.push([index, indexAux]);
             }
         }
         
         first[index].first = unique(first[index].first)
+
+        first = controlNullFirstFunction(first);
+
         return first;
     }
 
     function controlNullFirstFunction(first) {
         if (controlNullFirst[0] !== undefined) {
-                for (var u = 0; u < controlNullFirst.length; u++) {
-                    var firstIndexAux = controlNullFirst[u][0];
-                    var naoTerminalIndexAux = controlNullFirst[u][1];
-                    first[firstIndexAux].first += first[firstIndexAux].first == '' ? first[naoTerminalIndexAux].first : ('|' + first[naoTerminalIndexAux].first);
-                }
+            for (var u = 0; u < controlNullFirst.length; u++) {
+                var firstIndexAux = controlNullFirst[u][0];
+                var naoTerminalIndexAux = controlNullFirst[u][1];
+                first[firstIndexAux].first += first[firstIndexAux].first == '' ? first[naoTerminalIndexAux].first : ('|' + first[naoTerminalIndexAux].first);
+                first[firstIndexAux].first = unique(first[firstIndexAux].first)
             }
+        }
+
+        return first;
     }
 
     //Remove elementos repetidos da sentença
