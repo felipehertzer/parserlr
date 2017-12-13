@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-    //Monta a tabela no clique
+    // Executado quando gramática é informada e botão de "Montar Tabela" é pressionado
     $("#monta-tabela").on("click", function () {
         // Oculta áreas de resultados
         $("#first-follow").hide();
@@ -25,32 +25,30 @@ $(document).ready(function () {
             gramatica["naoTerminais"] = gramatica["naoTerminais"].replace(/\s/g, '').split(",");
             gramatica["terminais"] = gramatica["terminais"].replace(/\s/g, '').split(",");
             
+            // Separa produções de um mesmo NT, que estão na mesma linha, em linhas diferentes
             gramatica = separaProducoes(gramatica);
 
-            /***************************************************************************/
-
-            // REALIZAR CHAMADA DA BUSCA DOS FOLLOW AQUI
-            // COMENTAR TRECHO ABAIXO
-
+            // Busca de follows dos NTs da gramática informada
+            var follows = buscaFirstFollow(gramatica);
+            
             /*var follows = [{NT: "S", follow: "$"},
                             {NT: "A", follow: ";|$"},
                             {NT: "E", follow: ")"},
                             {NT: "C", follow: "$"}];*/
 
-            var follows = buscaFirstFollow(gramatica);
-            
             /*
             var follows = [{NT: "E", follow: "+|)|$"},
                             {NT: "T", follow: "+|*|)|$"},
                             {NT: "F", follow: "+|*|)|$"}];
             */
-            /***************************************************************************/
-
+            
+            // Construção da tabela utilizada na verificação
             construcaoTabelaSLR(gramatica, follows);
         }
 
     });
 
+    // Executado quando sentença é informada e botão de "Analisar" é pressionado
     $("#analisar").on("click", function () {
 
         // Busca dados armazenados nas variáveis de sessão do navegador
@@ -59,6 +57,7 @@ $(document).ready(function () {
         var arrayDesvio = JSON.parse(sessionStorage.getItem('desvios'));
         var gramatica = JSON.parse(sessionStorage.getItem('gramatica'));
 
+        // Chamada de função que realiza análise de sentença informada e retorna estrutura da tabela para ser exibida
         var html = construcaoTabelaAnalisar(arrayAcao, arrayDesvio, gramatica, arrayResolvidos);
 
         $("#output").css("display", "block");
@@ -69,6 +68,7 @@ $(document).ready(function () {
 
     /*********************** FUNÇÕES DE FIRST E FOLLOW ***********************/
 
+    // Fluxo de busca de firsts e follows
     function buscaFirstFollow(gramatica) {
         //Inicializa array do first e follow no objeto gramatica
         var first = [];  
@@ -104,6 +104,7 @@ $(document).ready(function () {
     }
 
     var controlNullFollow = [];
+
     // Busca os follows da gramática
     function buscaFollow(gramatica, follow) {
         for(var t = 0; t < gramatica.naoTerminais.length; t++){
@@ -156,6 +157,7 @@ $(document).ready(function () {
     }
 
     var controlNullFirst = [];
+
     // Busca os first da gramática
     function buscaFirst(gramatica, first, naoTerminais, terminais) {
         
@@ -198,17 +200,16 @@ $(document).ready(function () {
         }
         result = result.join("|");
         return result;
-    }
-
-    
+    }    
 
     /*********************** FIM DAS FUNÇÕES DE FIRST E FOLLOW ***********************/
 
     /*********************** FUNÇÕES DE CRIAÇÃO DE TABELA ***********************/
 
+    // Fluxo de construção da tabela SLR
     function construcaoTabelaSLR(gramatica, follows){
 
-        // Extende a gramática
+        // Extende a gramática (Ex.: S' -> S)
         gramatica.producoes.splice(0, 0, {naoTerminais: gramatica.simboloInicio + "'", complemento: gramatica.simboloInicio});
 
         // Adiciona ponto na frente das produções
@@ -220,7 +221,7 @@ $(document).ready(function () {
         var goto = [];
         var arrayResolvidos = [];
     
-        // Insere produção inicial no array
+        // Insere produção inicial no array (I0)
         goto.push(novoItemGoto(null,null, formataProducao(gramatica.producoes[0]), gramatica, null));
         arrayResolvidos.push(novoItemGoto(null,null, formataProducao(gramatica.producoes[0]), gramatica, null));
 
@@ -230,6 +231,7 @@ $(document).ready(function () {
             // Divide diversas produções de um mesmo índice do array
             var producoes = goto[x].producoes.split(", ");           
             
+            // Declaração de array auxiliar utilizado para verificar se produção já foi verificada neste item
             var tempResolvidos = [];
 
             // Para cada produção do item
@@ -238,26 +240,33 @@ $(document).ready(function () {
                 // Verifica o símbolo que se encontra após o ponto
                 var simbolo= verificaPonto(item);
 
+                // Se produção ainda não foi verificada neste item e se produção ainda não foi resolvida
                 if (tempResolvidos.indexOf(item) == -1 && simbolo != "") {
 
+                    // Insere produção no array auxiliar
                     tempResolvidos.push(item);                      
 
                     // Avança o ponto para a próxima posição
                     var novaProducao = avancaPonto(item);
 
+                    // Percorre demais produções do item verificando se são do mesmo NT
                     for (var j = i + 1; j < producoes.length; j++) {
-                        //var gotoIndex = existeGoto(avancaPonto(producoes[j]), goto);
+                        // Se encontrar mais produções do mesmo NT, trata elas juntas
                         if (verificaPonto(producoes[j]) == simbolo) {
                             novaProducao += novaProducao != "" ? ", " + avancaPonto(producoes[j]) : avancaPonto(producoes[j]);
                             tempResolvidos.push(producoes[j]);
                         }
                     }                        
 
+                    // Se novo item gerado possuir produções
                     if (novaProducao != "") {
+
+                        // Se novo item ainda não foi tratado, insere no array de pendências "goto"
                         var gotoIndex = existeGoto(novaProducao, goto);
                         if (gotoIndex == -1) {
                             goto.push(novoItemGoto(x, simbolo, novaProducao, gramatica, x));
                         }
+                        // Insere no array de itens resolvidos
                         var gotoIndex = existeGoto(novaProducao, goto);
                         arrayResolvidos.push(novoItemGoto(x, simbolo, novaProducao, gramatica, gotoIndex));
                     }                        
@@ -349,17 +358,17 @@ $(document).ready(function () {
         sessionStorage.setItem('goto', JSON.stringify(goto));
     }
         
+    // Padroniza itens do array de Goto
     function novoItemGoto (orig, simb, prod, gramatica, passo) {
-        // Padroniza itens do array de Goto
         return {origem: orig,
                 simbolo: simb,
                 producoes: closure(prod, gramatica),
                 passo: passo};
     }
 
+    // Trata closures de produções de itens do array de Goto
     function closure(prod, gramatica) {
-        // Trata closures de produções de itens do array de Goto
-
+        
         // Separa cada produção do item
         var producoes = prod.split(", ");
         
@@ -381,7 +390,7 @@ $(document).ready(function () {
                         // Padroniza o formato dele
                         var producao = formataProducao(item);
 
-                        // E adiciona na lista de produções do item
+                        // E adiciona na lista de produções do item se ainda não estiver
                         if ($.inArray(producao, producoes) == -1) {
                             producoes.push(producao);
                         }
@@ -402,24 +411,26 @@ $(document).ready(function () {
         return prod;
     }
 
+    // Verifica posição do ponto na produção e retorna símbolo seguinte, se existir
     function verificaPonto (producao) {
 
         // Verifica posição do ponto na produção
         var simbolos = producao.split(" -> ")[1].split(" ");
         var posicaoPonto = simbolos.indexOf(".");
 
-        // Se não for o último item da lista
+        // Se o ponto não for o último símbolo da produção
         if (posicaoPonto < simbolos.length - 1) {
             // Retorna o símbolo seguinte
             return simbolos[posicaoPonto + 1]
         }
-        // Se for o último item da lista
+        // Se for o último símbolo da produção
         else {
             // Retorna vazio, indicando que produção está resolvida
             return "";
         }
     }
 
+    // Avança o ponto para a próxima posição da produção
     function avancaPonto(prod) {
 
         // Verifica posição do ponto
@@ -441,32 +452,57 @@ $(document).ready(function () {
         return prod;
     }
 
+    // Retorna produção em uma string padronizada
     function formataProducao (prod) {
-        // Retorna produção em uma string padronizada
         return prod.naoTerminais + " -> " + prod.complemento;
     }
 
+    // Verifica no array de goto se esta produção já foi inserida
+    function existeGoto (novaProducao, goto) {
+
+        // Se existe, retorna seu índice
+        // Senão, retorna -1
+
+        var existe = -1;
+        $.each(goto, function(j, itemJ){
+            if (itemJ.producoes == novaProducao || itemJ.producoes.indexOf(novaProducao) > -1) {
+                existe = j;
+            }
+        });
+
+        return existe;
+    }
+
+    // Formata a tabela e as demais estruturas para serem exibidas
     function exibeTabelaSLR(arrayAcao, arrayDesvio, gramatica, arrayResolvidos, follows) {
 
         ////////////////// Exibe passos da criação dos conjuntos canônicos //////////////////
 
+        // Array auxiliar que armazena itens resolvidos
         var exibidos = [0];
+
+        // Insere primeiro item na tabela
         var html = "<tr><td>I0 = { " + arrayResolvidos[0].producoes + " }</td></tr>";
 
+        // Percorre os demais passos
         for (var i = 1; i < arrayResolvidos.length; i++) {
+
+            // Se item já foi resolvido, indica em que passo foi resolvido
             if (exibidos.indexOf(arrayResolvidos[i].passo) > -1) {
                 html += "<tr><td>goto( I" + arrayResolvidos[i].origem + " , " + arrayResolvidos[i].simbolo + " ) = { " + arrayResolvidos[i].producoes + " } <strong>Resolvido em I" + arrayResolvidos[i].passo + "</strong></td></tr>";
             }
+            // Senão, exibe resolução e insere no array auxiliar
             else {
                 html += "<tr><td><strong>I" + arrayResolvidos[i].passo + "</strong> = goto( I" + arrayResolvidos[i].origem + " , " + arrayResolvidos[i].simbolo + " ) = { " + arrayResolvidos[i].producoes + " }</td></tr>";
                 exibidos.push(arrayResolvidos[i].passo);
-            }
-            
+            }            
         }
 
+        // Deixa tabela visível
         $("#table table#goto tbody").text("");
         $("#table table#goto tbody").append(html);
         
+
         ////////////////// Exibe Follows dos NT //////////////////
 
         var html = "";
@@ -486,6 +522,7 @@ $(document).ready(function () {
         $("ul#follow").text("");
         $("ul#follow").append(html);
 
+
         ////////////////// Exibe Produções Separadas da Gramática //////////////////
 
         var html = "";
@@ -497,14 +534,16 @@ $(document).ready(function () {
         }       
 
         $("ol#listaProducoes").text("");
-        $("ol#listaProducoes").append(html);
+        $("ol#listaProducoes").append(html);        
 
-        
 
         ////////////////// Exibe tabela construída //////////////////
 
+
+        // Insere linha de legendas legendas das colunas
         var html = "<tr><th></th><th colspan='" + gramatica.terminais.length + "'>Ação</th><th colspan='" + gramatica.naoTerminais.length + "'>Desvio</th></tr>";
 
+        // Insere linha com Ts e NTs
         html += "<tr><th></th>";
         
         for (var i = 0; i < gramatica.terminais.length; i++) {
@@ -516,12 +555,15 @@ $(document).ready(function () {
 
         html += "</tr>";
 
+        // Insere cada linha da tabela
         for (var i = 0; i < arrayAcao.length; i++) {
             html += "<tr><th>" + i + "</th>";
 
+            // Insere ações da linha
             for (var j = 0; j < gramatica.terminais.length; j++) {
                 html += arrayAcao[i][j] != null ? "<td>" + arrayAcao[i][j] + "</td>" : "<td></td>";
             }
+            // Insere desvios da linha
             for (var j = 0; j < gramatica.naoTerminais.length; j++) {
                 html += arrayDesvio[i][j] != null ? "<td>" + arrayDesvio[i][j] + "</td>" : "<td></td>";
             }
@@ -529,6 +571,7 @@ $(document).ready(function () {
             html += "</tr>";
         }        
         
+        // Exibe tabela
         $("#table table#slr tbody").text("");
         $("#table table#slr tbody").append(html);
 
@@ -537,9 +580,9 @@ $(document).ready(function () {
         $('html,body').animate({ scrollTop: $("#table").offset().top }, 'slow');
     }
 
+    // Separa NT que possuem mais de uma produção na mesma linha em linhas diferentes
     function separaProducoes (gramatica) {
-        // Separa NT que possuem mais de uma produção na mesma linha em linhas diferente
-
+        
         // Percorre lista de produções
         for (var x = 0; x < gramatica.producoes.length; x++) {
 
@@ -559,8 +602,7 @@ $(document).ready(function () {
                 gramatica.producoes.splice(x, 1);
                 for (var i = 0; i < producoes.length; i++) {
                     gramatica.producoes.splice(x + i, 0, arrayProducoes[i]);
-                }
-                
+                }                
             }
         }
 
@@ -568,20 +610,9 @@ $(document).ready(function () {
         return gramatica;
     }
 
-    function existeGoto (novaProducao, goto) {
-        // Verifica no array de goto se esta produção já foi inserida
-        var existe = -1;
-        $.each(goto, function(j, itemJ){
-            if (itemJ.producoes == novaProducao || itemJ.producoes.indexOf(novaProducao) > -1) {
-                existe = j;
-            }
-        });
-
-        return existe;
-    }
-
     /*********************** FIM DAS FUNÇÕES DE CRIAÇÃO DE TABELA ***********************/
 
+    /*********************** FUNÇÕES DE VERIFICAÇÃO DE SENTENÇA ***********************/
 
     function construcaoTabelaAnalisar(arrayAcao, arrayDesvio, gramatica, arrayResolvidos) {
         var passos = 1;
@@ -647,7 +678,8 @@ $(document).ready(function () {
         html += "</tbody></table>";
         return html;
     }
-    // funcao para criar linha da tabela apenas visual
+    
+    // Função para criar linha da tabela apenas visual
     function tdTabelaAnalisar(passos, pilha, sentenca, acao){
         var html ="<tr>";
         html +="<td>"+pilha.join(" ")+"</td>";
@@ -655,4 +687,6 @@ $(document).ready(function () {
         html +="<td>"+(acao === 'E' ? "ERRO" : (acao === 'S' ? "Empilha E"+passos : (acao === 'A' ? "Aceita" : acao)))+"</td></tr>";
         return html;
     }
+
+    /*********************** FIM DAS FUNÇÕES DE VERIFICAÇÃO DE SENTENÇA ***********************/
 });
