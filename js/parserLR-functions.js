@@ -119,9 +119,9 @@ $(document).ready(function () {
                         //Pega o indice do não-terminal que produz a sentença, para buscar o follow dele
                         var indiceAux = gramatica.naoTerminais.indexOf(gramatica.producoes[q].naoTerminais);
                         //Follow do elemento é o follow do não-terminal que produz a sentença
-                        if (follow[indiceAux].follow !== undefined) {
+                        if (follow[indiceAux].follow !== "") {
                             follow[t].follow += follow[t].follow == '' ? follow[indiceAux].follow : ('|' + follow[indiceAux].follow)
-                        } else if (follow[indiceAux].follow === undefined) {
+                        } else if (follow[indiceAux].follow === "") {
                             controlNullFollow.push([t, indiceAux]);
                         }
                         
@@ -143,17 +143,23 @@ $(document).ready(function () {
             }
             follow[t].follow = unique(follow[t].follow)
         }
+
+        follow = controlNullFollowFunction(follow);
+
         return follow;
     }
 
-    function controlNullFollowFunction(first) {
+    function controlNullFollowFunction(follow) {
         if (controlNullFollow[0] !== undefined) {
-                for (var u = 0; u < controlNullFollow.length; u++) {
-                    var followIndexAux = controlNullFollow[u][0];
-                    var naoTerminalIndexAux = controlNullFollow[u][1];
-                    follow[followIndexAux].follow += follow[followIndexAux].follow == '' ? follow[naoTerminalIndexAux].follow : ('|' + follow[naoTerminalIndexAux].follow);
-                }
+            for (var u = 0; u < controlNullFollow.length; u++) {
+                var followIndexAux = controlNullFollow[u][0];
+                var naoTerminalIndexAux = controlNullFollow[u][1];
+                follow[followIndexAux].follow += follow[followIndexAux].follow == '' ? follow[naoTerminalIndexAux].follow : ('|' + follow[naoTerminalIndexAux].follow);
+                follow[followIndexAux].follow = unique(follow[followIndexAux].follow)
             }
+        }
+
+            return follow;
     }
 
     var controlNullFirst = [];
